@@ -103,3 +103,4 @@ gets a test here before anything relies on it.
 - [mcgpu-pet-wrapper](https://github.com/electronics10/mcgpu-pet-wrapper)
 - [mcgpu-recon](https://github.com/electronics10/mcgpu-recon)
 - [pet-sim-gen](https://github.com/electronics10/pet-sim-gen)
+- [pet-scatter-correction](https://github.com/electronics10/pet-scatter-correction) (SSS and real-image tools)
