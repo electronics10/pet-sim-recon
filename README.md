@@ -96,3 +96,9 @@ gets a test here before anything relies on it.
 8. The split between this toolkit and the two studies is a first draft and may change.
 9. How real raw data would enter, if a source appears: a reader that turns it into the same sinogram
    layout as simulated data.
+
+## Previous works (may serve as prototypes)
+
+- [mcgpu-pet-wrapper](https://github.com/electronics10/mcgpu-pet-wrapper)
+- [mcgpu-recon](https://github.com/electronics10/mcgpu-recon)
+- [pet-sim-gen](https://github.com/electronics10/pet-sim-gen)
