@@ -3,7 +3,8 @@
 The BIPI lab's shared toolkit for simulated preclinical PET: simulate scans with MCGPU-PET, build
 datasets, reconstruct, correct, and measure. Used by [deep-scatter-pet](https://github.com/electronics10/deep-scatter-pet) and [mr-pet-synergy](https://github.com/electronics10/mr-pet-synergy); any future
 simulated-PET study can use it too. It replaces three earlier prototypes (a simulator wrapper, a dataset
-generator and a reconstructor). The code is rewritten; the findings below are kept.
+generator and a reconstructor). Their code may be migrated after review (see Engineering); the
+findings below are kept.
 
 Status: **draft README, 2026-10-19**. Everything under "Decided" was confirmed by the project lead;
 everything else is open.
