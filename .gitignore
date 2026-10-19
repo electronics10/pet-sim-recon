@@ -1,0 +1,13 @@
+# Python and environments
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.pixi/
+.venv/
+
+# Data never goes in git: simulations, scans, checkpoints
+data/
+*.raw.gz
+*.vox.gz
+*.dcm
+checkpoints*/
