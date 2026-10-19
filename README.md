@@ -1,7 +1,7 @@
 # pet-sim-recon
 
 The BIPI lab's shared toolkit for simulated preclinical PET: simulate scans with MCGPU-PET, build
-datasets, reconstruct, correct, and measure. Used by `deep-scatter-pet` and `mr-pet-synergy`; any future
+datasets, reconstruct, correct, and measure. Used by [deep-scatter-pet](https://github.com/electronics10/deep-scatter-pet) and [mr-pet-synergy](https://github.com/electronics10/mr-pet-synergy); any future
 simulated-PET study can use it too. It replaces three earlier prototypes (a simulator wrapper, a dataset
 generator and a reconstructor). The code is rewritten; the findings below are kept.
 
@@ -91,8 +91,8 @@ gets a test here before anything relies on it.
    and MCGPU-PET's own licence needs checking. Building from source may be better.
 4. Licence for the toolkit (the prototypes used MIT).
 5. Which metrics belong here and which stay study-specific.
-6. Whether convolution subtraction is needed (depends on `deep-scatter-pet` open question 1).
-7. Where the MR-like image generator lives: here, or in `mr-pet-synergy`.
+6. Whether convolution subtraction is needed (depends on [deep-scatter-pet](https://github.com/electronics10/deep-scatter-pet) open question 1).
+7. Where the MR-like image generator lives: here, or in [mr-pet-synergy](https://github.com/electronics10/mr-pet-synergy).
 8. The split between this toolkit and the two studies is a first draft and may change.
 9. How real raw data would enter, if a source appears: a reader that turns it into the same sinogram
    layout as simulated data.
