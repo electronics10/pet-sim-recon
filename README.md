@@ -29,8 +29,11 @@ everything else is open.
 
 Learned models (networks, training) belong to the studies, not here.
 
-**Real raw data** (sinograms or list-mode from a real scanner) are not available now: the Bruker scanner
-gives only images. The design must not rule them out, so they can be added if a source appears.
+**Real raw data:** the scanner operator agreed to provide list-mode data from the 2026-11-02 phantom
+session (record in `experiments/2026-11-02-phantom-pilot/` of `mr-pet-synergy` and `deep-scatter-pet`).
+Using it needs the file format, normalization data and the detector geometry. The real detector
+(monolithic LYSO blocks with depth of interaction) differs from the simulated discrete-crystal stand-in,
+so real data need their own scanner model. The design must leave room for this.
 
 ## Decided
 
@@ -95,8 +98,8 @@ gets a test here before anything relies on it.
 6. Whether convolution subtraction is needed (depends on [deep-scatter-pet](https://github.com/electronics10/deep-scatter-pet) open question 1).
 7. Where the MR-like image generator lives: here, or in [mr-pet-synergy](https://github.com/electronics10/mr-pet-synergy).
 8. The split between this toolkit and the two studies is a first draft and may change.
-9. How real raw data would enter, if a source appears: a reader that turns it into the same sinogram
-   layout as simulated data.
+9. How real list-mode data would enter: a reader for the Bruker list-mode format, and a scanner model
+   for the real detector geometry, separate from the simulated one.
 
 ## Previous works (may serve as prototypes)
 
