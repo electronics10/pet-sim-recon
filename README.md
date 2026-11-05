@@ -1,15 +1,10 @@
 # pet-sim-recon
 
-The BIPI lab's shared toolkit for simulated preclinical PET: simulate scans with MCGPU-PET, build
-datasets, reconstruct, correct, and measure. Used by [deep-scatter-pet](https://github.com/electronics10/deep-scatter-pet) and [mr-pet-synergy](https://github.com/electronics10/mr-pet-synergy); any future
-simulated-PET study can use it too. It replaces three earlier prototypes (a simulator wrapper, a dataset
-generator and a reconstructor). Their code may be migrated after review (see Engineering); the
-findings below are kept.
+This is a toolkit for simulating PET by Monte Carlo simulation. It also provides the corresponding reconstruction and some other features such as scatter correction. 
 
-Status: **draft README, 2026-10-19**. Everything under "Decided" was confirmed by the project lead;
-everything else is open.
+The Monte Carlo simulation is based on [MCGPU-PET](https://github.com/DIDSR/MCGPU-PET) (Herraiz et al., Comput. Phys. Commun. 295 (2024) 109008, doi:10.1016/j.cpc.2023.109008, developed at the US FDA and in the public domain (17 U.S.C. §105)).
 
-## What it provides
+## What it (should) provides
 
 - **Simulation:** run MCGPU-PET on a voxel object (material, density and activity per voxel). Output:
   trues and scatter sinograms stored separately, the emission image, and a record of every input.
@@ -26,84 +21,31 @@ everything else is open.
 - **Metrics:** generic image-quality measures shared by the studies.
 - **Real images:** read the scanner's DICOM images (PET and MR), place them on the simulation grid, and
   forward-project them into synthetic raw data.
-
-Learned models (networks, training) belong to the studies, not here.
-
-**Real raw data:** the scanner operator agreed to provide list-mode data from the 2026-11-02 phantom
-session (record in `experiments/2026-11-02-phantom-pilot/` of `mr-pet-synergy` and `deep-scatter-pet`).
+- **Real raw data:** the scanner operator agreed to provide list-mode data from the 2026-11-02 phantom
+session (record in `experiments/2026-11-02-phantom-pilot/` of [mr-pet-synergy](https://github.com/electronics10/mr-pet-synergy) and [deep-scatter-pet](https://github.com/electronics10/deep-scatter-pet)).
 Using it needs the file format, normalization data and the detector geometry. The real detector
 (monolithic LYSO blocks with depth of interaction) differs from the simulated discrete-crystal stand-in,
 so real data need their own scanner model. The design must leave room for this.
 
-## Decided
-
-**Simulator facts.** Each was checked in the prototypes against the MCGPU-PET source code and against
-simulated point sources. Much of the prototype code was AI-written and not fully reviewed, so each fact
-gets a test here before anything relies on it.
-
-- **Always simulate at span 1** (one sinogram plane per ordered ring pair). Compression at simulation time
-  cannot be undone, and reconstruction needs the uncompressed planes. Rebinning to a higher span is
-  allowed afterwards, as a view of the data.
-- **File layout:** sinograms are `(plane, angle, radial)` with the radial index fastest. At span 1 the
-  simulator fills only every other plane slot; reading strips the empty slots.
-- **Angles** run from +90° to −90° across the angular bins.
-- **Radial bins are not arc-corrected:** bin position `s = R · cos(π m / N_det)` (R = scanner radius,
-  m = crystal-index separation). Iterative reconstruction models this exactly; analytic methods (FBP,
-  FORE) arc-correct first.
-- **Oblique planes are mixed:** the simulator decides a plane's sign from photon tracking order, which
-  is random. So plane (a, b) holds a 50/50 mix of lines (a, b) and (b, a). Its forward model is the mean
-  of the two mirror lines' projections, and mirror planes can be added exactly.
-- **The scanner model is built from the exact line endpoints** (parallelproj's low-level projectors),
-  not from a library-defined scanner geometry. The library's own bin order differs from the
-  simulator's; the mismatch gave near-black MLEM images.
-
-**Modelling choices.**
-
-- **Scatter is added** to the forward model (`A x + s`), never subtracted from the data. Subtraction
-  makes negative data and breaks the Poisson model.
-- **The simulated scanner matches the real Bruker 7 T PET** in the physically real quantities: radius
-  52.5 mm, axial field of view 150 mm, transaxial field of view 80 mm, energy window and energy
-  resolution. The real scanner's monolithic crystals cannot be modelled in MCGPU-PET, so the discrete
-  crystal layout is a stand-in.
-- **Water at a chosen density stands in for soft tissue:** at 511 keV, attenuation follows electron
-  density, which follows mass density for light elements.
-- **Simulate at the highest count level needed;** lower levels come from thinning, which is free.
-- **Reconstructions have a free overall scale;** compare absolute values only after matching scale on a
-  known region.
-
-**Engineering.**
-
-- **One Python package**, split into clear internal parts. The GPU simulator is an optional extra, so
-  everything else installs on any machine. Split into several packages only if someone outside the lab
-  needs one part alone.
-- **Environment: pixi**, because parallelproj and CuPy need non-Python libraries from conda-forge.
-- **Public** on GitHub.
-- **Studies pin a toolkit version.**
-- **Prototype code may be migrated** one module at a time, but only once the lead has reviewed and
-  understood it and tests cover it.
-- **Reference speed (prototype):** 80 × 80 × 149 voxels of 1 mm, about 174 M lines of response, about
-  2.6 s per MLEM iteration on one GPU.
-- **Cite** Badal et al. 2024, *MCGPU-PET*, Comput. Phys. Commun. 295:109008, in any publication that uses
-  the simulator.
-
 ## Open questions
 
-1. File format for simulation runs and reconstructions (e.g. HDF5, NumPy files + JSON, NIfTI).
-2. Does MCGPU-PET model detector-efficiency differences between lines? If yes, how to compute
-   normalization factors.
-3. How to ship MCGPU-PET in a public repository: a bundled compiled binary breaks on other GPU types,
+1. How to ship MCGPU-PET in a public repository: a bundled compiled binary breaks on other GPU types,
    and MCGPU-PET's own licence needs checking. Building from source may be better.
-4. Licence for the toolkit (the prototypes used MIT).
-5. Which metrics belong here and which stay study-specific.
-6. Whether convolution subtraction is needed (depends on [deep-scatter-pet](https://github.com/electronics10/deep-scatter-pet) open question 1).
-7. Where the MR-like image generator lives: here, or in [mr-pet-synergy](https://github.com/electronics10/mr-pet-synergy).
-8. The split between this toolkit and the two studies is a first draft and may change.
-9. How real list-mode data would enter: a reader for the Bruker list-mode format, and a scanner model
-   for the real detector geometry, separate from the simulated one.
+2. Which metrics belong here and which stay study-specific.
+3. Whether convolution subtraction is needed (depends on [deep-scatter-pet](https://github.com/electronics10/deep-scatter-pet) open question 1).
+4. Where the MR-like image generator lives: here, or in [mr-pet-synergy](https://github.com/electronics10/mr-pet-synergy).
+5. How real list-mode data would enter: a reader for the Bruker list-mode format, and a scanner model for the real detector geometry, separate from the simulated one.
 
-## Previous works (may serve as prototypes)
+## Note for developer
+
+This is mainly a scientific research project/tool. There is no clear-cut goal. Every design decision may be changed since we are not sure what to expect later on.
+
+This toolkit would later be used by [deep-scatter-pet](https://github.com/electronics10/deep-scatter-pet) and [mr-pet-synergy](https://github.com/electronics10/mr-pet-synergy), both of which are my downstream research projects; any future simulated-PET study can use it too. It replaces my earlier prototypes, of which the code may be migrated after review. The earlier prototypes:
 
 - [mcgpu-pet-wrapper](https://github.com/electronics10/mcgpu-pet-wrapper)
 - [mcgpu-recon](https://github.com/electronics10/mcgpu-recon)
 - [pet-sim-gen](https://github.com/electronics10/pet-sim-gen)
-- [pet-scatter-correction](https://github.com/electronics10/pet-scatter-correction) (SSS and real-image tools)
+- [pet-scatter-correction](https://github.com/electronics10/pet-scatter-correction)
+
+
+
