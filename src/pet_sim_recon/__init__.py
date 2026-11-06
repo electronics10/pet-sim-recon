@@ -1,0 +1,1 @@
+"""pet-sim-recon: MCGPU-PET simulation, reconstruction, and others."""
