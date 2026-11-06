@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pet-sim-recon"
+version = "0.1.0"
+description = "MCGPU-PET simulation, reconstruction, and others"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2",
+    "cupy>=14.1.1",
+    "parallelproj>=1.10.2,<2",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ---- development environment (pixi) -------------------------------------------------
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[tool.pixi.system-requirements]
+cuda = "12"
+
+[tool.pixi.dependencies]
+python = "3.12.*"
+numpy = ">=2,<3"
+cupy = ">=14.1.1,<15"
+cuda-version = "12.*"
+parallelproj = ">=1.10.2,<2"
+pytest = ">=9,<10"
+
+[tool.pixi.pypi-dependencies]
+pet-sim-recon = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+test = "pytest"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
