@@ -11,3 +11,6 @@ data/
 *.vox.gz
 *.dcm
 checkpoints*/
+
+# Files
+whiteboard.*
