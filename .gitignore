@@ -14,6 +14,7 @@ checkpoints*/
 
 # Files
 whiteboard.*
+user_test.py
 
 # Read-only prototype and simulator sources
 reference/
