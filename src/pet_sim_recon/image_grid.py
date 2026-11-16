@@ -30,6 +30,13 @@ class ImageGrid:
         return tuple(n * d for n, d in zip(self.num_voxels_zyx, self.voxel_size_mm_zyx))
 
     @property
+    def voxel_volume_mL(self) -> float:
+        """Volume of one voxel. 1 mL = 1 cm^3 = 1000 mm^3."""
+        dz_mm, dy_mm, dx_mm = self.voxel_size_mm_zyx
+        return dz_mm * dy_mm * dx_mm / 1000
+
+
+    @property
     def first_voxel_center_mm_zyx(self) -> tuple[float, float, float]:
         """Center of voxel [0, 0, 0]. parallelproj calls this img_origin."""
         return tuple(centers[0] for centers in self.voxel_centers_mm_zyx())

@@ -1,0 +1,1 @@
+"""The MCGPU-PET boundary: everything that knows MCGPU-PET's file formats, units and limits."""
