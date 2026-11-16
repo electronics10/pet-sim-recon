@@ -46,7 +46,9 @@ def numbers(value_lines):
 
 def write_sample(tmp_path, random_seed=12345):
     path = tmp_path / "MCGPU-PET.in"
-    write_input_file(path, SAMPLE_SCANNER, SAMPLE_SINOGRAM, SAMPLE_ACQUISITION, random_seed, "object.vox.gz")
+    write_input_file(
+        path, SAMPLE_SCANNER, SAMPLE_SINOGRAM, SAMPLE_ACQUISITION, random_seed, "object.vox.gz", ("air", "water")
+    )
     return read_values(path.read_text())
 
 

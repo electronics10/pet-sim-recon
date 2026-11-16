@@ -17,6 +17,7 @@ def make_object(material_id=None, density=None, activity=None, grid=GRID):
         material_id=np.full(shape, 2) if material_id is None else material_id,
         density_g_per_cm3=np.full(shape, 1.0) if density is None else density,
         activity_Bq_per_mL=np.full(shape, 1000.0) if activity is None else activity,
+        material_names=("air", "water"),
     )
 
 
@@ -45,3 +46,9 @@ def test_material_id_zero_is_rejected():
 def test_negative_activity_is_rejected():
     with pytest.raises(ValueError, match="activity"):
         make_object(activity=np.full(GRID.num_voxels_zyx, -1.0))
+
+
+def test_material_id_without_a_name_is_rejected():
+    """Ids 1 and 2 have names (air, water); id 3 doesn't."""
+    with pytest.raises(ValueError, match="material names"):
+        make_object(material_id=np.full(GRID.num_voxels_zyx, 3))

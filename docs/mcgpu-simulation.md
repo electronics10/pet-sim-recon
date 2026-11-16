@@ -11,10 +11,10 @@ run_simulation(run_dir, voxel_object, scanner, sinogram, acquisition, random_see
 
 | File | What it is |
 | --- | --- |
-| `settings.json` | Scanner, grid, sinogram and acquisition settings, the seed, and the binary path |
+| `settings.json` | Scanner, grid, sinogram and acquisition settings, material names, the seed, and the binary path |
 | `object.vox.gz` | The voxel object, in MCGPU-PET's units (activity in Bq per voxel, sizes in cm) |
 | `MCGPU-PET.in` | The simulator's input file |
-| `materials/` | A link to the pinned clone's material files |
+| `materials/` | A link to `external/mcgpu-materials/` (see `materials.md`) |
 | `MCGPU-PET.out` | Everything the simulator printed |
 | `sinogram_Trues.raw.gz`, `sinogram_Scatter.raw.gz` | The sinograms, read in the sinogram-layout chunk |
 | `image_Trues.raw.gz`, `image_Scatter.raw.gz` | Detected coincidences per voxel of origin |
@@ -41,13 +41,19 @@ Values the toolkit fixes, and why:
 | Dose tallies | off | Not needed |
 | Image resolution | 128 | Read, but used only in commented-out kernel code |
 | Energy bins | 700 | Bins of `Energy_Sinogram_Spectrum.dat`, upstream's value |
-| Materials | 1 = air, 2 = water | Files from the pinned clone; more join when a phantom needs them |
+| Materials | the object's `material_names`, in ID order | ID k means the k-th name; see `materials.md` |
 
 Approximations in the simulator's physics:
 
 - **Energy resolution:** each photon's energy is blurred by a Gaussian with FWHM = R × (its own
-  energy) (kernel line 1803). Real scintillators improve roughly as 1/√E, so this over-states the blur at
-  low energies, relative to a resolution quoted at 511 keV.
+  energy) (kernel line 1803): the same fraction R at every energy. In a real scintillator the fraction
+  grows at lower energy, roughly as 1/√E (assumption: counting statistics of the scintillation light
+  dominate). So MCGPU-PET *under*-blurs low-energy photons. With R = 12 % at 511 keV, a real detector
+  would be at about 12 % × √(511/340) ≈ 15 % at 340 keV, while MCGPU-PET stays at 12 %. Scattered photons
+  are the low-energy ones, so this changes how many of them cross the lower edge of the window. Likely
+  effect (reasoning, not yet checked): there are more scattered photons just below the edge than just
+  above it, so a wider blur pushes more of them in than out. MCGPU-PET would then accept slightly less
+  scatter than a real scanner with the same resolution quoted at 511 keV.
 - **Energy window:** both photons must be strictly inside (low, high).
 - **Decay:** activity decays as exp(−t/τ) during the scan (kernel line 286), with τ the mean life. For F-18
   (τ = 9502 s), a 100 s scan loses about 1 %.

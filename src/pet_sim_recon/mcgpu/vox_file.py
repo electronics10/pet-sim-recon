@@ -6,17 +6,17 @@ from pathlib import Path
 import numpy as np
 
 from pet_sim_recon.image_grid import ImageGrid
+from pet_sim_recon.mcgpu.materials import MAX_MATERIALS
 from pet_sim_recon.voxel_object import VoxelObject
 
-MAX_MATERIALS = 15  # MCGPU-PET.h line 96
 HEADER_START = "[SECTION VOXELS HEADER v.2008-04-13]"
 HEADER_END = "[END OF VXH SECTION]"
 
 
 def write_vox(voxel_object: VoxelObject, path: Path) -> None:
     """Write a .vox file; numpy gzips it when the name ends in .gz."""
-    if voxel_object.material_id.max() > MAX_MATERIALS:
-        raise ValueError(f"MCGPU-PET allows material ids up to {MAX_MATERIALS}")
+    if len(voxel_object.material_names) > MAX_MATERIALS:
+        raise ValueError(f"MCGPU-PET allows at most {MAX_MATERIALS} materials, got {len(voxel_object.material_names)}")
 
     grid = voxel_object.grid
     nz, ny, nx = grid.num_voxels_zyx
@@ -41,8 +41,8 @@ def write_vox(voxel_object: VoxelObject, path: Path) -> None:
     np.savetxt(path, columns, fmt=["%d", "%.6g", "%.6g"], header=header, comments="")
 
 
-def read_vox(path: Path) -> VoxelObject:
-    """Read a .vox or .vox.gz file back into a VoxelObject."""
+def read_vox(path: Path, material_names: tuple[str, ...]) -> VoxelObject:
+    """Read a .vox or .vox.gz file back into a VoxelObject. The file stores only ids, so names come from you."""
     opener = gzip.open if str(path).endswith(".gz") else open
     with opener(path, "rt") as file:
         lines = file.read().splitlines()
@@ -60,4 +60,5 @@ def read_vox(path: Path) -> VoxelObject:
         material_id=columns[:, 0].astype(int).reshape(shape),
         density_g_per_cm3=columns[:, 1].reshape(shape),
         activity_Bq_per_mL=columns[:, 2].reshape(shape) / grid.voxel_volume_mL,
+        material_names=material_names,
     )

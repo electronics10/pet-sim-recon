@@ -20,6 +20,7 @@ def labeled_object():
         material_id=np.full(label.shape, 2),
         density_g_per_cm3=np.full(label.shape, 1.0),
         activity_Bq_per_mL=label / UNEVEN_GRID.voxel_volume_mL,
+        material_names=("air", "water"),
     )
 
 
@@ -45,7 +46,7 @@ def test_header_lists_x_y_z_in_cm(tmp_path):
 def test_write_then_read_gives_the_same_object(tmp_path, filename):
     original = labeled_object()
     write_vox(original, tmp_path / filename)
-    copy = read_vox(tmp_path / filename)
+    copy = read_vox(tmp_path / filename, material_names=("air", "water"))
 
     assert copy.grid.num_voxels_zyx == original.grid.num_voxels_zyx
     np.testing.assert_allclose(copy.grid.voxel_size_mm_zyx, original.grid.voxel_size_mm_zyx)
@@ -56,8 +57,7 @@ def test_write_then_read_gives_the_same_object(tmp_path, filename):
 
 def test_more_than_15_materials_is_rejected(tmp_path):
     obj = labeled_object()
-    material_id = obj.material_id.copy()
-    material_id[0, 0, 0] = 16
-    too_many = VoxelObject(obj.grid, material_id, obj.density_g_per_cm3, obj.activity_Bq_per_mL)
+    sixteen_names = tuple(f"material_{k}" for k in range(1, 17))
+    too_many = VoxelObject(obj.grid, obj.material_id, obj.density_g_per_cm3, obj.activity_Bq_per_mL, sixteen_names)
     with pytest.raises(ValueError, match="material"):
         write_vox(too_many, tmp_path / "bad.vox")
