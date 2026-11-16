@@ -39,6 +39,7 @@ pet-sim-recon = { path = ".", editable = true }
 
 [tool.pixi.tasks]
 test = "pytest"
+build-mcgpu = "bash scripts/build_mcgpu.sh"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
