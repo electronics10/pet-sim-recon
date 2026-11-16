@@ -4,11 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from pet_sim_recon.acquisition import AcquisitionSettings
+from pet_sim_recon.mcgpu.materials import material_files
 from pet_sim_recon.scanner import Scanner
-
-# Material id k in the .vox file means the k-th file here. The files come from the pinned MCGPU-PET clone
-# (external/MCGPU-PET/sample_simulation/materials), linked into each run folder as materials/.
-MATERIAL_FILES = ("air_5-515keV.mcgpu.gz", "water_5-515keV.mcgpu.gz")
 
 GPU_NUMBER = 0
 THREADS_PER_BLOCK = 32  # read_input requires a multiple of 32
@@ -35,6 +32,7 @@ def write_input_file(
     acquisition: AcquisitionSettings,
     random_seed: int,
     vox_filename: str,
+    material_names: tuple[str, ...],
 ) -> None:
     """Write an MCGPU-PET .in file. Section headers must match read_input exactly."""
     if random_seed < 1:
@@ -88,7 +86,9 @@ def write_input_file(
         "",
         "#[SECTION MATERIAL FILE LIST v.2009-11-30]",
     ]
-    lines += [f"materials/{name}  # {material_id}" for material_id, name in enumerate(MATERIAL_FILES, start=1)]
+    # Material id k in the .vox file means the k-th file listed here.
+    for material_id, filename in enumerate(material_files(material_names), start=1):
+        lines.append(f"materials/{filename}  # {material_id}")
     Path(path).write_text("\n".join(lines) + "\n")
 
 

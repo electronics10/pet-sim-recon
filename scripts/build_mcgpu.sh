@@ -21,6 +21,12 @@ if [ ! -d "$EXTERNAL_DIR/cuda-samples" ]; then
     git clone --depth 1 --branch "$SAMPLES_TAG" "$SAMPLES_URL" "$EXTERNAL_DIR/cuda-samples"
 fi
 
+# The 17 ready-made material files and upstream's converter (docs/materials.md).
+MATERIALS_ZIP="$EXTERNAL_DIR/MCGPU-PET/sample_simulation/materials/other_materials_ICRP110_5-515keV__MCGPU-PET.zip"
+mkdir -p "$EXTERNAL_DIR/mcgpu-materials"
+python -m zipfile -e "$MATERIALS_ZIP" "$EXTERNAL_DIR/mcgpu-materials"
+echo "Unpacked materials into $EXTERNAL_DIR/mcgpu-materials"
+
 echo "Using $(command -v nvcc): $(nvcc --version | tail -1)"
 cd "$EXTERNAL_DIR/MCGPU-PET"
 nvcc -DUSING_CUDA -O3 -use_fast_math -m64 \
