@@ -44,3 +44,11 @@ class Scanner:
         """Axial position z of each ring centre. Ring 0 starts at z = -axial_fov_mm / 2."""
         ring_index = np.arange(self.num_rings)
         return -self.axial_fov_mm / 2 + (ring_index + 0.5) * self.ring_pitch_mm
+
+    def crystal_center_mm_zyx(self, crystal_index, ring_index) -> np.ndarray:
+        """Center of a crystal on the detector cylinder, as (z, y, x). Indices may be arrays: shape (..., 3)."""
+        phi_rad = self.crystal_center_angles_rad()[crystal_index]
+        z_mm = self.ring_center_z_mm()[ring_index]
+        y_mm = self.radius_mm * np.sin(phi_rad)
+        x_mm = self.radius_mm * np.cos(phi_rad)
+        return np.stack(np.broadcast_arrays(z_mm, y_mm, x_mm), axis=-1)

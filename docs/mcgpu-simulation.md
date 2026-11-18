@@ -58,6 +58,27 @@ Approximations in the simulator's physics:
 - **Decay:** activity decays as exp(−t/τ) during the scan (kernel line 286), with τ the mean life. For F-18
   (τ = 9502 s), a 100 s scan loses about 1 %.
 
+## Woodcock overshoot: why every object needs one dense voxel
+
+MCGPU-PET moves photons with Woodcock tracking: steps drawn with the *shortest* mean free path in the whole
+grid (`MCGPU-PET_kernel.cu` line 320). When a step leaves the grid, the photon is tallied where that step
+left it (line 328), not at the grid's edge. `tally_Sinogram` then intersects the photon's line with the
+detector cylinder in float32 (lines 1645–1687). Far from the cylinder, the quadratic's discriminant is the
+difference of two numbers ~10⁸ cm², and float32 keeps only ~7 digits of them, so the hit point and the
+crystal come out wrong.
+
+The step length is what matters. With water anywhere in the grid, the mean free path at 511 keV is about
+10 cm and the error is negligible. In an all-air grid (0.0012 g/cm³), it is about 90 m (μ/ρ ≈ 0.087 cm²/g,
+NIST XCOM).
+
+Measured with a point source in an all-air grid (10⁶ decays): 21 % of trues fell more than 3 mm from the
+source, the mean |transaxial residual| was 1.3 mm instead of 0.52 mm, and 11 % of trues were lost. Adding a
+single voxel of 0.1, 0.3 or 1.0 g/cm³ in a far corner made all of it disappear: the results then matched an
+exact numpy replica of the kernel geometry.
+
+So `run_simulation` refuses objects whose densest voxel is below 0.1 g/cm³ (`check_peak_density`), the
+lowest density tested. Any real phantom passes. For an object in air, put one water voxel in a corner.
+
 ## Verification (2026-11-16)
 
 Upstream's `sample_simulation` was run through the toolkit:

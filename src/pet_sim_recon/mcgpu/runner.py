@@ -18,12 +18,24 @@ from pet_sim_recon.voxel_object import VoxelObject
 DEFAULT_MCGPU_DIR = Path(__file__).resolve().parents[3] / "external" / "MCGPU-PET"
 DEFAULT_MATERIALS_DIR = Path(__file__).resolve().parents[3] / "external" / "mcgpu-materials"
 VOX_FILENAME = "object.vox.gz"
+# Without one voxel at least this dense, MCGPU-PET mis-bins photons (docs/mcgpu-simulation.md, Woodcock overshoot).
+MIN_PEAK_DENSITY_G_PER_CM3 = 0.1
 OUTPUT_FILES = (
     "sinogram_Trues.raw.gz",
     "sinogram_Scatter.raw.gz",
     "image_Trues.raw.gz",
     "image_Scatter.raw.gz",
 )
+
+
+def check_peak_density(voxel_object: VoxelObject) -> None:
+    """Raise unless some voxel reaches MIN_PEAK_DENSITY_G_PER_CM3, which keeps MCGPU-PET's Woodcock steps short."""
+    peak_density = float(voxel_object.density_g_per_cm3.max())
+    if peak_density < MIN_PEAK_DENSITY_G_PER_CM3:
+        raise ValueError(
+            f"the densest voxel is {peak_density} g/cm^3; below {MIN_PEAK_DENSITY_G_PER_CM3} g/cm^3 MCGPU-PET "
+            f"mis-bins photons (docs/mcgpu-simulation.md). Put one water voxel in a corner of the grid."
+        )
 
 
 def run_simulation(
@@ -50,6 +62,7 @@ def run_simulation(
         raise FileNotFoundError(f"{missing_materials} not in {materials_dir}; run `pixi run build-mcgpu`")
     check_fits_scanner(voxel_object.grid, scanner)
     check_sinogram_fits_scanner(scanner, sinogram)
+    check_peak_density(voxel_object)
 
     run_dir.mkdir(parents=True)
     settings = {
