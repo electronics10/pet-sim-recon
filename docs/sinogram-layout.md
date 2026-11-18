@@ -64,8 +64,9 @@ per bin. The same checks also passed for 320 crystals (your prototype's scanner)
 
 ## Who uses which
 
-- The projector uses each bin's exact crystal pair, so interleaving and the radial spacing are modeled
-  automatically.
+- The projector (our module, from the projector chunk) turns each bin's exact crystal pair into LOR end
+  points and has parallelproj integrate along them, so interleaving and the radial spacing are modeled
+  automatically. parallelproj's own scanner and sinogram classes use a different bin order and are not used.
 - Rebinning, arc correction and FBP use (θ, s) and must handle the interleaving and spacing explicitly.
 
 ## Not yet verified
