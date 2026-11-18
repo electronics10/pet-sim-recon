@@ -44,3 +44,17 @@ def test_forward_projection_of_uniform_cube_on_gpu():
     assert isinstance(projection, cupy.ndarray)  # it ran on the GPU path
     expected_mm = [cube_side_mm, cube_side_mm * np.sqrt(2)]
     np.testing.assert_allclose(cupy.asnumpy(projection), expected_mm, rtol=1e-5)
+
+
+def test_parallelproj_reads_end_points_in_image_axis_order():
+    """parallelproj pairs the 3 coordinates of an end point with the image's axes in order. Our images are
+    (z, y, x), so end points are (z, y, x) too (docs/coordinate-frame.md). An uneven image of ones (2, 4, 8)
+    with 1 mm voxels: a line along the last axis (x) crosses 8 mm. With the wrong order it would cross 2 mm."""
+    image = cupy.ones((2, 4, 8), dtype=cupy.float32)
+    voxel_size = cupy.ones(3, dtype=cupy.float32)
+    image_origin = cupy.asarray([-0.5, -1.5, -3.5], dtype=cupy.float32)  # centered on the origin
+    start = cupy.asarray([[0.0, 0.0, -50.0]], dtype=cupy.float32)  # (z, y, x)
+    end = cupy.asarray([[0.0, 0.0, 50.0]], dtype=cupy.float32)
+
+    projection = parallelproj.joseph3d_fwd(start, end, image, image_origin, voxel_size)
+    np.testing.assert_allclose(cupy.asnumpy(projection), [8.0], rtol=1e-5)

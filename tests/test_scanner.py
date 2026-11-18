@@ -52,3 +52,17 @@ def test_ring_centers_are_symmetric_about_zero():
 def test_invalid_scanner_is_rejected():
     with pytest.raises(ValueError):
         Scanner(radius_mm=-52.5, axial_fov_mm=150.0, num_rings=75, num_crystals_per_ring=320)
+
+def test_crystal_center_in_zyx():
+    """8 crystals, 2 rings over 2 mm: crystal 4 sits at phi = 22.5 degrees, ring 1 at z = +0.5 mm."""
+    scanner = Scanner(radius_mm=1.0, axial_fov_mm=2.0, num_rings=2, num_crystals_per_ring=8)
+    phi = np.pi / 8
+    np.testing.assert_allclose(scanner.crystal_center_mm_zyx(4, 1), [0.5, np.sin(phi), np.cos(phi)])
+
+
+def test_crystal_centers_broadcast():
+    """One crystal per row, one ring per column: shape (crystals, rings, 3)."""
+    scanner = Scanner(radius_mm=1.0, axial_fov_mm=2.0, num_rings=2, num_crystals_per_ring=8)
+    centers = scanner.crystal_center_mm_zyx(np.arange(8)[:, None], np.arange(2)[None, :])
+    assert centers.shape == (8, 2, 3)
+    np.testing.assert_allclose(np.hypot(centers[..., 1], centers[..., 2]), 1.0)  # all on the cylinder
