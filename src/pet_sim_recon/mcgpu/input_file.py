@@ -16,7 +16,7 @@ NUM_ENERGY_BINS = 700  # bins of Energy_Sinogram_Spectrum.dat, upstream's value
 
 @dataclass(frozen=True)
 class SinogramSettings:
-    """MCGPU-PET's sinogram tally numbers. What they mean is the sinogram-layout chunk."""
+    """MCGPU-PET's sinogram tally numbers. Their meaning: docs/sinogram-layout.md."""
 
     num_angular_bins: int
     num_radial_bins: int

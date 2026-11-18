@@ -9,6 +9,7 @@ from pet_sim_recon.acquisition import AcquisitionSettings
 from pet_sim_recon.image_grid import check_fits_scanner
 from pet_sim_recon.mcgpu.input_file import SinogramSettings, write_input_file
 from pet_sim_recon.mcgpu.materials import material_files
+from pet_sim_recon.mcgpu.sinogram_layout import check_sinogram_fits_scanner
 from pet_sim_recon.mcgpu.vox_file import write_vox
 from pet_sim_recon.scanner import Scanner
 from pet_sim_recon.voxel_object import VoxelObject
@@ -48,6 +49,7 @@ def run_simulation(
     if missing_materials:
         raise FileNotFoundError(f"{missing_materials} not in {materials_dir}; run `pixi run build-mcgpu`")
     check_fits_scanner(voxel_object.grid, scanner)
+    check_sinogram_fits_scanner(scanner, sinogram)
 
     run_dir.mkdir(parents=True)
     settings = {
