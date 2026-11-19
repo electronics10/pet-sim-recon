@@ -135,6 +135,59 @@ likelihood curves like s/x, the quadratic penalty like Ω, and RDP like Ω/x. We
 is a heuristic. **The same β̃ doesn't mean the same noise for different priors**, so methods are compared on
 contrast-vs-noise curves, at equal noise, never at equal β̃.
 
+## Results: the NEMA NU 4 phantom at 10 % dose
+
+**Setup.** The full-dose MCGPU-PET run (2.25 × 10⁷ trues, 3.3 × 10⁶ scattered) is thinned to 10 %, five times with
+different seeds, about 2.6 × 10⁶ counts each. Scatter enters as a known background (an oracle). MLEM runs 23 iterations,
+and each MAP reconstruction runs 60 more from that image. The MR image is made from the phantom's own materials, with the
+4 mm rod removed from it, so that rod is invisible in MR. So is the water insert, which looks like the water around it.
+The air insert and the other rods are visible.
+
+Rod values are the mean in the rod's core (radius d/2 − 0.5 mm, central 10 mm) over the uniform-region mean, so 1 is
+correct. Cold-insert values are spill-over ratios, so 0 is correct. Values are mean ± standard deviation over the five
+realizations.
+
+**At about 5 % noise**
+
+| Method | %STD | 3 mm rod (in MR) | 4 mm rod (not in MR) | 5 mm rod (in MR) | Water insert (not in MR) | Air insert (in MR) |
+| --- | --- | --- | --- | --- | --- | --- |
+| MLEM + 2 mm Gaussian | 5.5 | 0.669 ± 0.012 | 0.814 ± 0.012 | 0.828 ± 0.009 | 0.173 ± 0.003 | 0.177 ± 0.008 |
+| Quadratic, β̃ = 0.3 | 4.4 | 0.831 ± 0.016 | 0.915 ± 0.013 | 0.917 ± 0.010 | 0.069 ± 0.004 | 0.074 ± 0.010 |
+| RDP, β̃ = 0.3 | 5.1 | 0.956 ± 0.028 | 0.983 ± 0.022 | 0.972 ± 0.014 | 0.118 ± 0.003 | 0.117 ± 0.009 |
+| Bowsher (B = 6), β̃ = 0.3 | 6.2 | 0.988 ± 0.018 | 0.963 ± 0.015 | 0.987 ± 0.015 | 0.065 ± 0.004 | 0.066 ± 0.010 |
+
+**At about 3 % noise**
+
+| Method | %STD | 3 mm rod (in MR) | 4 mm rod (not in MR) | 5 mm rod (in MR) | Water insert (not in MR) | Air insert (in MR) |
+| --- | --- | --- | --- | --- | --- | --- |
+| MLEM + 3 mm Gaussian | 3.2 | 0.440 ± 0.005 | 0.627 ± 0.006 | 0.684 ± 0.006 | 0.214 ± 0.003 | 0.215 ± 0.007 |
+| Quadratic, β̃ = 1 | 2.9 | 0.617 ± 0.007 | 0.742 ± 0.007 | 0.776 ± 0.006 | 0.194 ± 0.005 | 0.185 ± 0.012 |
+| RDP, β̃ = 1 | 2.8 | 0.779 ± 0.016 | 0.870 ± 0.012 | 0.888 ± 0.010 | 0.250 ± 0.003 | 0.240 ± 0.008 |
+| Bowsher (B = 6), β̃ = 1 | 2.9 | 0.992 ± 0.012 | 0.825 ± 0.008 | 0.992 ± 0.013 | 0.143 ± 0.005 | 0.077 ± 0.009 |
+
+**What this shows.**
+
+- **Bowsher keeps what the MR shows.** At about 3 % noise the MR-visible rods stay at 0.99, against 0.62–0.89 for the
+  uniform priors.
+- **It helps less where the MR is blind.** The MR-invisible 4 mm rod falls to 0.825. That is better than quadratic
+  (0.742) but below RDP (0.870). Spill-over in the invisible water insert is 0.143, nearly twice that of the visible air
+  insert (0.077).
+- **So the prior's benefit follows the MR**, as its construction predicts. It didn't erase the MR-invisible rod here.
+- **The uniform-region mean stays within 0.2 % of the truth with Bowsher at every β̃ tested.** At β̃ = 1 it rises by 3.1 %
+  with quadratic and 2.3 % with RDP. We have not investigated why.
+
+**Limits of this comparison.**
+
+- The MR image comes from the phantom: perfect alignment, same voxels, same edges. Real PET-MR is harder.
+- The five realizations are thinned from one full-dose run, so their spread slightly understates the true noise.
+- B = 6 and the other settings are not tuned. A sweep of B = 3, 6, 12 was run on one realization only.
+- This is one phantom. It says nothing about clinical images.
+
+**Agreement with the prototype.** On the same full-dose run, 114 of the 120 values (%STD, max-voxel RC of the 3, 4 and 5 mm
+rods, both spill-over ratios) fall within 3 standard deviations of this ensemble. The two largest differences are RDP's %STD
+at β̃ = 0.01 (44.7 against 42.4) and its water spill-over at β̃ = 1 (0.234 against 0.250). The two codes differ in
+how they attenuate the mirror lines, and we did not trace these differences further.
+
 ## Approximations and limits
 
 - **Iterations.** MAP runs a finite number of iterations from an MLEM start, so it is close to converged, not exactly.
