@@ -20,7 +20,7 @@ Along one axis with n voxels of size d, voxel i is centered at
 So the grid is centered on the scanner and spans ±n·d/2. Example: n = 4, d = 2 mm gives centers
 −3, −1, 1, 3 mm, and the grid spans −4 to 4 mm. Code: `ImageGrid.voxel_centers_mm_zyx`.
 
-parallelproj places an image by the center of voxel [0, 0, 0], which it calls `img_origin`:
+parallelproj places an image by the center of voxel [0, 0, 0], which it calls `image_origin`:
 c_0 = −(n − 1)/2 · d per axis (`ImageGrid.first_voxel_center_mm_zyx`). It pairs the three coordinates of
 every LOR end point with the image's axes in order, so **end points are (z, y, x) too**
 (`tests/test_environment.py`). How parallelproj interpolates between voxel centers (Joseph's method) is

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import cupy
 import numpy as np
-import parallelproj
+import parallelproj_core
 
 import pet_sim_recon
 
@@ -39,7 +39,8 @@ def test_forward_projection_of_uniform_cube_on_gpu():
                         [50.0, 50.0, 1.0]],
                        dtype=cupy.float32)
 
-    projection = parallelproj.joseph3d_fwd(start, end, image, image_origin, voxel_size)
+    projection = cupy.zeros(2, dtype=cupy.float32)
+    parallelproj_core.joseph3d_fwd(start, end, image, image_origin, voxel_size, projection)
 
     assert isinstance(projection, cupy.ndarray)  # it ran on the GPU path
     expected_mm = [cube_side_mm, cube_side_mm * np.sqrt(2)]
@@ -56,5 +57,6 @@ def test_parallelproj_reads_end_points_in_image_axis_order():
     start = cupy.asarray([[0.0, 0.0, -50.0]], dtype=cupy.float32)  # (z, y, x)
     end = cupy.asarray([[0.0, 0.0, 50.0]], dtype=cupy.float32)
 
-    projection = parallelproj.joseph3d_fwd(start, end, image, image_origin, voxel_size)
+    projection = cupy.zeros(1, dtype=cupy.float32)
+    parallelproj_core.joseph3d_fwd(start, end, image, image_origin, voxel_size, projection)
     np.testing.assert_allclose(cupy.asnumpy(projection), [8.0], rtol=1e-5)
