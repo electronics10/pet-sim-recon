@@ -143,38 +143,41 @@ and each MAP reconstruction runs 60 more from that image. The MR image is made f
 4 mm rod removed from it, so that rod is invisible in MR. So is the water insert, which looks like the water around it.
 The air insert and the other rods are visible.
 
-Rod values are the mean in the rod's core (radius d/2 − 0.5 mm, central 10 mm) over the uniform-region mean, so 1 is
-correct. Cold-insert values are spill-over ratios, so 0 is correct. Values are mean ± standard deviation over the five
-realizations.
+Rod values are the mean in the rod's core (radius d/2 − 0.5 mm, central 10 mm) over the true activity, 20 kBq/mL, so 1
+is correct. (Dividing by the reconstructed uniform mean instead, as NEMA does, would favor any method whose uniform region
+drifts up; see below.) Cold-insert values are NEMA spill-over ratios, over the uniform mean, so 0 is correct. Values are
+mean ± standard deviation over the five realizations.
 
 **At about 5 % noise**
 
-| Method | %STD | 3 mm rod (in MR) | 4 mm rod (not in MR) | 5 mm rod (in MR) | Water insert (not in MR) | Air insert (in MR) |
-| --- | --- | --- | --- | --- | --- | --- |
-| MLEM + 2 mm Gaussian | 5.5 | 0.669 ± 0.012 | 0.814 ± 0.012 | 0.828 ± 0.009 | 0.173 ± 0.003 | 0.177 ± 0.008 |
-| Quadratic, β̃ = 0.3 | 4.4 | 0.831 ± 0.016 | 0.915 ± 0.013 | 0.917 ± 0.010 | 0.069 ± 0.004 | 0.074 ± 0.010 |
-| RDP, β̃ = 0.3 | 5.1 | 0.956 ± 0.028 | 0.983 ± 0.022 | 0.972 ± 0.014 | 0.118 ± 0.003 | 0.117 ± 0.009 |
-| Bowsher (B = 6), β̃ = 0.3 | 6.2 | 0.988 ± 0.018 | 0.963 ± 0.015 | 0.987 ± 0.015 | 0.065 ± 0.004 | 0.066 ± 0.010 |
+| Method | %STD | Uniform / true | 3 mm rod (in MR) | 4 mm rod (not in MR) | 5 mm rod (in MR) | Water insert (not in MR) | Air insert (in MR) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| MLEM + 2 mm Gaussian | 5.5 | 1.001 | 0.669 ± 0.012 | 0.815 ± 0.013 | 0.829 ± 0.010 | 0.173 ± 0.003 | 0.177 ± 0.008 |
+| Quadratic, β̃ = 0.3 | 4.4 | 1.016 | 0.845 ± 0.017 | 0.930 ± 0.015 | 0.932 ± 0.010 | 0.069 ± 0.004 | 0.074 ± 0.010 |
+| RDP, β̃ = 0.3 | 5.1 | 1.010 | 0.965 ± 0.029 | 0.993 ± 0.024 | 0.982 ± 0.014 | 0.118 ± 0.003 | 0.117 ± 0.009 |
+| Bowsher (B = 6), β̃ = 0.3 | 6.2 | 1.001 | 0.990 ± 0.019 | 0.964 ± 0.016 | 0.989 ± 0.016 | 0.065 ± 0.004 | 0.066 ± 0.010 |
 
 **At about 3 % noise**
 
-| Method | %STD | 3 mm rod (in MR) | 4 mm rod (not in MR) | 5 mm rod (in MR) | Water insert (not in MR) | Air insert (in MR) |
-| --- | --- | --- | --- | --- | --- | --- |
-| MLEM + 3 mm Gaussian | 3.2 | 0.440 ± 0.005 | 0.627 ± 0.006 | 0.684 ± 0.006 | 0.214 ± 0.003 | 0.215 ± 0.007 |
-| Quadratic, β̃ = 1 | 2.9 | 0.617 ± 0.007 | 0.742 ± 0.007 | 0.776 ± 0.006 | 0.194 ± 0.005 | 0.185 ± 0.012 |
-| RDP, β̃ = 1 | 2.8 | 0.779 ± 0.016 | 0.870 ± 0.012 | 0.888 ± 0.010 | 0.250 ± 0.003 | 0.240 ± 0.008 |
-| Bowsher (B = 6), β̃ = 1 | 2.9 | 0.992 ± 0.012 | 0.825 ± 0.008 | 0.992 ± 0.013 | 0.143 ± 0.005 | 0.077 ± 0.009 |
+| Method | %STD | Uniform / true | 3 mm rod (in MR) | 4 mm rod (not in MR) | 5 mm rod (in MR) | Water insert (not in MR) | Air insert (in MR) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| MLEM + 3 mm Gaussian | 3.2 | 0.998 | 0.439 ± 0.005 | 0.626 ± 0.007 | 0.682 ± 0.007 | 0.214 ± 0.003 | 0.215 ± 0.007 |
+| Quadratic, β̃ = 1 | 2.9 | 1.031 | 0.636 ± 0.007 | 0.765 ± 0.008 | 0.800 ± 0.007 | 0.194 ± 0.005 | 0.185 ± 0.012 |
+| RDP, β̃ = 1 | 2.8 | 1.023 | 0.797 ± 0.016 | 0.890 ± 0.014 | 0.909 ± 0.010 | 0.250 ± 0.003 | 0.240 ± 0.008 |
+| Bowsher (B = 6), β̃ = 1 | 2.9 | 1.002 | 0.993 ± 0.012 | 0.826 ± 0.010 | 0.993 ± 0.013 | 0.143 ± 0.005 | 0.077 ± 0.009 |
 
 **What this shows.**
 
-- **Bowsher keeps what the MR shows.** At about 3 % noise the MR-visible rods stay at 0.99, against 0.62–0.89 for the
+- **Bowsher keeps what the MR shows.** At about 3 % noise the MR-visible rods stay at 0.99, against 0.64–0.91 for the
   uniform priors.
-- **It helps less where the MR is blind.** The MR-invisible 4 mm rod falls to 0.825. That is better than quadratic
-  (0.742) but below RDP (0.870). Spill-over in the invisible water insert is 0.143, nearly twice that of the visible air
+- **It helps less where the MR is blind.** The MR-invisible 4 mm rod falls to 0.826. That is better than quadratic
+  (0.765) but below RDP (0.890). Spill-over in the invisible water insert is 0.143, nearly twice that of the visible air
   insert (0.077).
 - **So the prior's benefit follows the MR**, as its construction predicts. It didn't erase the MR-invisible rod here.
 - **The uniform-region mean stays within 0.2 % of the truth with Bowsher at every β̃ tested.** At β̃ = 1 it rises by 3.1 %
-  with quadratic and 2.3 % with RDP. We have not investigated why.
+  with quadratic and 2.3 % with RDP. We have not investigated why. Rods measured against that drifting mean would look
+  2–3 points worse for the uniform priors, which is why the rod columns use the true activity. That change doesn't
+  alter any conclusion above.
 
 **Limits of this comparison.**
 
