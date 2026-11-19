@@ -6,6 +6,7 @@ Conventions and derivations: docs/sinogram-layout.md.
 import numpy as np
 
 from pet_sim_recon.mcgpu.input_file import SinogramSettings
+from pet_sim_recon.recon.sinogram_lines import SinogramLines
 from pet_sim_recon.scanner import Scanner
 
 # Line angles of crystal pairs lie on a grid of half a crystal pitch (about 1e-2 rad), so this tolerance
@@ -196,3 +197,44 @@ def sum_mirror_planes(
     for plane in np.nonzero(partner >= 0)[0]:
         summed[np.searchsorted(kept_planes, partner[plane])] += counts[plane]
     return summed, kept_planes
+
+
+def summed_plane_ring_pairs(scanner: Scanner, sinogram: SinogramSettings) -> np.ndarray:
+    """Ring pair (lower, higher) of each plane of sum_mirror_planes's output, shape (summed planes, 2). Span 1 only."""
+    if sinogram.span != 1:
+        raise ValueError(f"only span 1 has one ring pair per summed plane, got span {sinogram.span}")
+    planes = ring_pair_planes(scanner, sinogram)
+    lower_ring, higher_ring = np.nonzero(np.triu(planes >= 0))
+    order = np.argsort(planes[lower_ring, higher_ring])  # summed planes keep the file's plane order
+    return np.stack([lower_ring[order], higher_ring[order]], axis=1)
+
+
+def summed_bin_lines(scanner: Scanner, sinogram: SinogramSettings) -> SinogramLines:
+    """The lines of every bin of the mirror-summed sinogram (docs/projector.md). Span 1 only.
+
+    Line A joins crystal a (the lower index) in the lower ring to crystal b in the higher ring. Oblique planes
+    also hold line B, with the rings swapped.
+    """
+    ring_pairs = summed_plane_ring_pairs(scanner, sinogram)
+    oblique_planes = np.nonzero(ring_pairs[:, 0] != ring_pairs[:, 1])[0]
+    crystal_pairs = crystal_pair_table(scanner, sinogram)
+    if (crystal_pairs < 0).any():
+        raise ValueError("some sinogram bins hold no crystal pair; num_radial_bins is too large")
+
+    rings_of_crystal_a = np.concatenate([ring_pairs[:, 0], ring_pairs[oblique_planes, 1]])
+    rings_of_crystal_b = np.concatenate([ring_pairs[:, 1], ring_pairs[oblique_planes, 0]])
+    return SinogramLines(
+        start_mm_zyx=_line_ends(scanner, crystal_pairs[..., 0], rings_of_crystal_a),
+        end_mm_zyx=_line_ends(scanner, crystal_pairs[..., 1], rings_of_crystal_b),
+        oblique_planes=oblique_planes,
+        sinogram_shape=(len(ring_pairs),) + crystal_pairs.shape[:2],
+    )
+
+
+def _line_ends(scanner: Scanner, crystals: np.ndarray, rings: np.ndarray) -> np.ndarray:
+    """Crystal centers (z, y, x) for every ring in rings and every (view, radial) bin: (rings x bins, 3), float32."""
+    yx_mm = scanner.crystal_center_mm_zyx(crystals, 0)[..., 1:]  # (views, radial bins, 2): the same in every ring
+    ends = np.empty((len(rings),) + crystals.shape + (3,), dtype=np.float32)
+    ends[..., 0] = scanner.ring_center_z_mm()[rings][:, None, None]
+    ends[..., 1:] = yx_mm
+    return ends.reshape(-1, 3)

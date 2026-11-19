@@ -11,7 +11,7 @@ requires-python = ">=3.12"
 dependencies = [
     "numpy>=2",
     "cupy>=14.1.1",
-    "parallelproj>=1.10.2,<2",
+    "parallelproj>=2.0.2,<3",
 ]
 
 [tool.setuptools.packages.find]
@@ -31,7 +31,7 @@ python = "3.12.*"
 numpy = ">=2,<3"
 cupy = ">=14.1.1,<15"
 cuda-version = "12.*"
-parallelproj = ">=1.10.2,<2"
+parallelproj = ">=2.0.2,<3"
 pytest = ">=9,<10"
 
 [tool.pixi.pypi-dependencies]

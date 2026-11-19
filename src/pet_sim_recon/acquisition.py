@@ -26,3 +26,9 @@ class AcquisitionSettings:
             raise ValueError(
                 f"need 0 <= low < high, got {self.energy_window_low_keV} and {self.energy_window_high_keV} keV"
             )
+
+    @property
+    def decay_weighted_time_s(self) -> float:
+        """Integral of exp(-t / mean life) over the scan: the scan time, counted at the starting activity."""
+        mean_life_s = self.isotope_mean_life_s
+        return mean_life_s * (1 - math.exp(-self.acquisition_time_s / mean_life_s))

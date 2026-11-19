@@ -35,10 +35,9 @@ class ImageGrid:
         dz_mm, dy_mm, dx_mm = self.voxel_size_mm_zyx
         return dz_mm * dy_mm * dx_mm / 1000
 
-
     @property
     def first_voxel_center_mm_zyx(self) -> tuple[float, float, float]:
-        """Center of voxel [0, 0, 0]. parallelproj calls this img_origin."""
+        """Center of voxel [0, 0, 0]. parallelproj calls this image_origin."""
         return tuple(centers[0] for centers in self.voxel_centers_mm_zyx())
 
     def voxel_centers_mm_zyx(self) -> tuple[np.ndarray, ...]:

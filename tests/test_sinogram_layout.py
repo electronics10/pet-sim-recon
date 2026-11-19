@@ -16,6 +16,8 @@ from pet_sim_recon.mcgpu.sinogram_layout import (
     radial_positions_mm,
     ring_pair_planes,
     sum_mirror_planes,
+    summed_bin_lines,
+    summed_plane_ring_pairs,
 )
 from pet_sim_recon.scanner import Scanner
 
@@ -233,3 +235,38 @@ def test_counts_in_an_unreachable_plane_are_rejected():
     counts[1] = 5
     with pytest.raises(ValueError, match="no ring pair"):
         sum_mirror_planes(counts, FOUR_RING_SCANNER, four_ring_sinogram(span=1))
+
+
+def test_summed_plane_ring_pairs_four_rings():
+    # one ring pair (lower, higher) per summed plane, in the order of sum_mirror_planes's kept planes
+    sinogram = four_ring_sinogram(span=1)
+    ring_pairs = summed_plane_ring_pairs(FOUR_RING_SCANNER, sinogram)
+    expected = [(0, 0), (1, 1), (2, 2), (3, 3), (0, 1), (1, 2), (2, 3), (0, 2), (1, 3), (0, 3)]
+    np.testing.assert_array_equal(ring_pairs, expected)
+    planes = ring_pair_planes(FOUR_RING_SCANNER, sinogram)
+    counts = np.zeros((num_planes(sinogram), 4, 7), dtype=int)
+    _, kept_planes = sum_mirror_planes(counts, FOUR_RING_SCANNER, sinogram)
+    np.testing.assert_array_equal(planes[ring_pairs[:, 0], ring_pairs[:, 1]], kept_planes)
+
+
+def test_summed_bin_lines_four_rings():
+    sinogram = four_ring_sinogram(span=1)
+    lines = summed_bin_lines(FOUR_RING_SCANNER, sinogram)
+    assert lines.sinogram_shape == (10, 4, 7)
+    np.testing.assert_array_equal(lines.oblique_planes, [4, 5, 6, 7, 8, 9])
+    assert len(lines.start_mm_zyx) == (10 + 6) * 4 * 7
+
+    crystal_pairs = crystal_pair_table(FOUR_RING_SCANNER, sinogram)
+    a, b = crystal_pairs[2, 3]  # view 2, radial bin 3
+    center = FOUR_RING_SCANNER.crystal_center_mm_zyx
+    line_a = np.ravel_multi_index((4, 2, 3), (10, 4, 7))  # plane 4 holds rings (0, 1)
+    np.testing.assert_allclose(lines.start_mm_zyx[line_a], center(a, 0), atol=1e-6)
+    np.testing.assert_allclose(lines.end_mm_zyx[line_a], center(b, 1), atol=1e-6)
+    line_b = 10 * 4 * 7 + np.ravel_multi_index((0, 2, 3), (6, 4, 7))  # plane 4 is the first oblique plane
+    np.testing.assert_allclose(lines.start_mm_zyx[line_b], center(a, 1), atol=1e-6)
+    np.testing.assert_allclose(lines.end_mm_zyx[line_b], center(b, 0), atol=1e-6)
+
+
+def test_summed_bin_lines_need_span_1():
+    with pytest.raises(ValueError, match="span 1"):
+        summed_bin_lines(FOUR_RING_SCANNER, four_ring_sinogram(span=3))

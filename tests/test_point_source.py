@@ -13,10 +13,13 @@ from pet_sim_recon.mcgpu.output_files import read_sinograms
 from pet_sim_recon.mcgpu.runner import DEFAULT_MCGPU_DIR, run_simulation
 from pet_sim_recon.mcgpu.sinogram_layout import (
     crystal_pair_table,
+    summed_bin_lines,
     line_angle_and_distance,
     ring_pair_planes,
     sum_mirror_planes,
 )
+from pet_sim_recon.recon.projector import Projector
+from pet_sim_recon.recon.system_model import line_sensitivity
 from pet_sim_recon.scanner import Scanner
 from pet_sim_recon.voxel_object import VoxelObject
 
@@ -39,8 +42,10 @@ SOURCE_ACTIVITY_BQ = 3e5
 MAX_MISS_MM = 3.0
 
 
-@pytest.fixture(scope="module")
-def point_source_run(tmp_path_factory):
+ACQUISITION = AcquisitionSettings(1.0, F18_MEAN_LIFE_S, 0.15, 358.0, 664.0)
+
+
+def point_source_object():
     """A point source in air, plus one water voxel in the far corner (the Woodcock overshoot, see the runner)."""
     shape = GRID.num_voxels_zyx
     material_id = np.full(shape, 1)
@@ -48,11 +53,13 @@ def point_source_run(tmp_path_factory):
     material_id[0, 0, 0], density[0, 0, 0] = 2, 1.0
     activity = np.zeros(shape)
     activity[SOURCE_VOXEL] = SOURCE_ACTIVITY_BQ / GRID.voxel_volume_mL
-    point_source = VoxelObject(GRID, material_id, density, activity, ("air", "water"))
-    acquisition = AcquisitionSettings(1.0, F18_MEAN_LIFE_S, 0.15, 358.0, 664.0)
+    return VoxelObject(GRID, material_id, density, activity, ("air", "water"))
 
+
+@pytest.fixture(scope="module")
+def point_source_run(tmp_path_factory):
     run_dir = tmp_path_factory.mktemp("point-source") / "run"
-    run_simulation(run_dir, point_source, SCANNER, SINOGRAM, acquisition, random_seed=7)
+    run_simulation(run_dir, point_source_object(), SCANNER, SINOGRAM, ACQUISITION, random_seed=7)
     trues, _ = read_sinograms(run_dir)
     return trues
 
@@ -139,3 +146,15 @@ def test_summing_mirror_planes_keeps_every_count(point_source_run):
     summed, kept_planes = sum_mirror_planes(point_source_run, SCANNER, SINOGRAM)
     assert len(kept_planes) == 75 * 76 // 2  # one plane per unordered ring pair
     assert summed.sum() == point_source_run.sum()
+
+
+def test_model_predicts_the_number_of_trues(point_source_run):
+    """With no fitted constant, the etendue model predicts how many trues MCGPU-PET detects (docs/projector.md).
+
+    Poisson noise on about 2e5 trues is 0.2 %. Air along the lines absorbs about 0.1 %; the model leaves it out.
+    """
+    cupy = pytest.importorskip("cupy")
+    projector = Projector(summed_bin_lines(SCANNER, SINOGRAM), GRID, xp=cupy)
+    sensitivity = line_sensitivity(projector.start_mm_zyx, projector.end_mm_zyx, SCANNER, ACQUISITION)
+    predicted = float(projector.forward(point_source_object().activity_Bq_per_mL, sensitivity).sum())
+    assert point_source_run.sum() / predicted == pytest.approx(1.0, abs=0.01)
