@@ -16,7 +16,8 @@ understands it: every scientific detail, and the architecture and workflow of th
 - Name every approximation where you use it.
 - Raise scientific or methodological concerns whenever you see them, even unasked. Offer style ideas only
   when asked.
-- The prototypes are reference: check new code against their outputs, and question them like any other code.
+- Check new code first against a known answer: a point source, a uniform cylinder, a case worked by hand. Compare with prototype output only where no known answer exists, label it a cross-check, and question the prototype like any other code.
+- Every number in docs, issues and talks comes from this repo's code and runs. Prototype outputs and earlier reports are not sources.
 
 ## Chunks and flags
 
@@ -94,6 +95,5 @@ MCGPU-PET is thinly documented, so its C/CUDA source is often the primary source
 - Keep low-level detail (file formats, index arithmetic, GPU memory handling) in a few dedicated modules, so
   the scientific code reads like the math.
 - Keep docstrings short; the long "why" goes in `docs/`.
-- Give every scientific function a test the user can read: a known answer (point source, uniform cylinder)
-  or a comparison with prototype output.
+- Give every scientific function a test the user can read, with a known answer (point source, uniform cylinder, a hand-worked case). A comparison with prototype output is the fallback when no known answer exists.
 - Preserve simulation runs and data, and ask before deleting any. Data stays out of git.
