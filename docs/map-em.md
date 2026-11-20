@@ -175,7 +175,7 @@ mean ± standard deviation over the five realizations.
   insert (0.077).
 - **So the prior's benefit follows the MR**, as its construction predicts. It didn't erase the MR-invisible rod here.
 - **The uniform-region mean stays within 0.2 % of the truth with Bowsher at every β̃ tested.** At β̃ = 1 it rises by 3.1 %
-  with quadratic and 2.3 % with RDP. We have not investigated why. Rods measured against that drifting mean would look
+  with quadratic and 2.3 % with RDP: edge ringing of the penalized estimate, explained below. Rods measured against that drifting mean would look
   2–3 points worse for the uniform priors, which is why the rod columns use the true activity. That change doesn't
   alter any conclusion above.
 
@@ -189,10 +189,54 @@ mean ± standard deviation over the five realizations.
 - B = 6 and the other settings are not tuned. A sweep of B = 3, 6, 12 was run on one realization only.
 - This is one phantom. It says nothing about clinical images.
 
-**Agreement with the prototype.** On the same full-dose run, 114 of the 120 values (%STD, max-voxel RC of the 3, 4 and 5 mm
-rods, both spill-over ratios) fall within 3 standard deviations of this ensemble. The two largest differences are RDP's %STD
-at β̃ = 0.01 (44.7 against 42.4) and its water spill-over at β̃ = 1 (0.234 against 0.250). The two codes differ in
-how they attenuate the mirror lines, and we did not trace these differences further.
+## Why the uniform mean rises with the uniform priors
+
+At β̃ = 1 the uniform-region mean rises by 3.1 % with the quadratic penalty and 2.3 % with RDP, and by less than 0.2 %
+with Bowsher. It is **edge ringing of the penalized estimate**: the image overshoots just inside the phantom's edge, and
+the NEMA ROI includes that ring.
+
+**The total doesn't rise.** At a MAP solution, every voxel with x_j > 0 satisfies
+s_j x_j = x_j [Aᵀ(y/ȳ)]_j − β x_j ∂R/∂x_j. Summed over voxels:
+
+    Σ_j s_j x_j = Σ_i y_i (Ax)_i / ȳ_i − β Σ_j x_j ∂R/∂x_j
+
+The quadratic penalty is homogeneous of degree 2 and RDP of degree 1, so by Euler's theorem the last sum is 2R or R:
+never negative. A penalty can only lower the sensitivity-weighted total, so a rise in one region is activity moved
+from another. Our converged reconstructions satisfy this identity to 10⁻⁵.
+
+**Where it goes.** Realization 0 and noise-free data y = Ax_true + b, β̃ = 1, 300 iterations from the MLEM start
+(the diagnostic run for issue #25, 2026-11-20). Mean over the central 10 mm of the uniform region, by radius, over the true
+activity:
+
+| Radius (mm) | 0–1 | 4–5 | 7–8 | 10–11 | 12–13 | 13–14 | 14–15 | 15–16 (outside) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Quadratic | 1.010 | 1.016 | 1.031 | 1.047 | 1.002 | 0.896 | 0.657 | 0.233 |
+| RDP | 1.008 | 1.012 | 1.022 | 1.038 | 1.017 | 0.947 | 0.741 | 0.151 |
+| Bowsher (B = 6) | 1.000 | 1.001 | 1.001 | 1.001 | 1.001 | 1.001 | 1.000 | 0.001 |
+| MLEM, 23 iterations | 1.000 | 1.002 | 1.004 | 1.001 | 1.004 | 1.047 | 0.874 | 0.091 |
+
+(noise-free data). The uniform priors spread activity across the phantom's edge (radius 15 mm) and raise a ring 3–6 mm
+inside it. The NEMA ROI (radius 11.25 mm) holds most of that ring, and its outer radii weigh most by area. The ROI
+mean is +3.1 % (quadratic), +2.3 % (RDP) and +0.05 % (Bowsher) on noise-free data, and +2.8 %, +2.1 % and −0.2 % on
+realization 0. It is not noise, and nothing changes between 60 and 300 iterations, so it is not convergence either.
+
+**Why a ring.** Near any point, a quadratically penalized estimate acts like a linear filter, its local impulse
+response (Fessler & Rogers 1996; Qi & Leahy 2000 for fully 3D PET): in frequency, about F(ω) / (F(ω) + β P(ω)), with
+F the Fisher information of the data and P the penalty. *Approximation:* for an idealized space-invariant 3D scanner,
+F ∝ 1/|ω| and a quadratic penalty gives P ∝ |ω|², so the filter is about 1 / (1 + cβ|ω|³). A filter 1 / (1 + |ω|^p)
+has a non-negative kernel only for p ≤ 2; at p = 3 its kernel has negative side lobes, so an edge overshoots on its
+inside. A 1D check: a unit step through 1 / (1 + |ω|²) rises to 1.000 without overshoot; through 1 / (1 + |ω|³), its
+kernel dips to −1.5 % of its peak and the step overshoots to 1.016, about four kernel widths inside the edge.
+A Gaussian post-filter has a positive kernel, so MLEM + Gaussian doesn't ring. RDP costs less across large jumps, so
+it rings less. Bowsher's weights drop the pairs across the edge, so nothing is smoothed there and nothing rings.
+
+**What follows.**
+
+- Recovery coefficients over the NEMA uniform mean are biased low by this ring for the uniform priors, which is why
+  our rod values use the true activity.
+- On real data, where the true activity is unknown, a central ROI is less affected: within 5 mm of the axis the
+  noise-free quadratic image is 1.010–1.016.
+- The size depends on β and on the phantom's edges; these numbers hold for this phantom at β̃ = 1.
 
 ## Approximations and limits
 
@@ -210,3 +254,5 @@ how they attenuate the mirror lines, and we did not trace these differences furt
 - Bowsher et al., IEEE Nucl Sci Symp Conf Rec 4:2488–2492, 2004.
 - Vunckx et al., IEEE Trans Med Imaging 31(3):599–612, 2012.
 - Schramm et al., IEEE Trans Med Imaging 37(2):590–603, 2018.
+- Fessler & Rogers, IEEE Trans Image Process 5(9):1346–1358, 1996.
+- Qi & Leahy, IEEE Trans Med Imaging 19(5):493–506, 2000.
