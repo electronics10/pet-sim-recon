@@ -182,7 +182,10 @@ mean ± standard deviation over the five realizations.
 **Limits of this comparison.**
 
 - The MR image comes from the phantom: perfect alignment, same voxels, same edges. Real PET-MR is harder.
-- The five realizations are thinned from one full-dose run, so their spread slightly understates the true noise.
+- The five realizations are thinned from one full-dose run, so they share its noise. For a bin with N ~ Poisson(λ),
+  two realizations thinned with keep probability p each have variance pλ but covariance p²λ: they correlate with
+  coefficient p. Their spread therefore estimates pλ(1 − p), and the SDs above are low by √(1 − p) ≈ 0.95 at p = 0.1.
+  This is exact for the counts and an approximation for the image metrics, which depend on the counts nonlinearly.
 - B = 6 and the other settings are not tuned. A sweep of B = 3, 6, 12 was run on one realization only.
 - This is one phantom. It says nothing about clinical images.
 
